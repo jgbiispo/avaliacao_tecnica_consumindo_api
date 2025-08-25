@@ -11,8 +11,6 @@ export const searchCountryByName = async (
 ) => {
   const nome = (req.query.nome as string | undefined)?.trim();
 
-  console.log('Searching for country with name:', nome);
-
   if (!nome) {
     return res.status(400).json({ erro: "Parâmetro 'nome' é obrigatório." });
   }

@@ -1,4 +1,4 @@
 export interface EvaluateCountryRequest {
-  codigo: string;
-  acao: 'like' | 'dislike';
+  code: string;
+  action: 'like' | 'dislike';
 }
