@@ -1,24 +1,49 @@
 import express from 'express';
+import type { Request, Response } from 'express';
 import { fetchAllCountries, fetchByName } from './services/restCountries';
 import { mapCountry } from './utils/mapCountry';
+import { CountryWithVotes } from './types/country';
+import { mergeVotes } from './utils/mergeVotes';
+import prisma from './db';
 
 const app = express();
 app.use(express.json());
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
 
-app.get('/test/countries', async (_req, res) => {
-  const all = await fetchAllCountries();
-  const mapped = all.map(mapCountry).slice(0, 10); // só os 10 primeiros
-  res.json(mapped);
-});
+app.get(
+  '/paises/top10',
+  async (
+    _req: Request,
+    res: Response<CountryWithVotes[] | { erro: string }>
+  ) => {
+    try {
+      const allCountries = await fetchAllCountries();
 
-app.get('/test/search', async (req, res) => {
-  const nome = (req.query.nome as string) || 'brasil';
-  const results = await fetchByName(nome);
-  const mapped = results.map(mapCountry);
-  res.json(mapped);
-});
+      const mapped = allCountries
+        .map(mapCountry)
+        .sort((a, b) => b.populacao - a.populacao)
+        .slice(0, 10);
+
+      const codes = mapped.map((c) => c.codigo);
+
+      const votes = await prisma.countryVote.findMany({
+        where: { codigo: { in: codes } },
+      });
+
+      const voteIndex = new Map(votes.map((v) => [v.codigo, v]));
+
+      const result: CountryWithVotes[] = mapped.map((c) =>
+        mergeVotes(c, voteIndex.get(c.codigo))
+      );
+
+      res.json(result);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ erro: 'Falha ao listar top 10 países.' });
+    }
+  }
+);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`API rodando na porta ${PORT}`));
