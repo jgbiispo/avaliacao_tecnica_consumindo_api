@@ -3,6 +3,36 @@ import { EvaluateCountryRequest } from '../types/request';
 import { fetchByCode } from '../services/restCountries';
 import prisma from '../db';
 
+/**
+ * @swagger
+ * /paises/avaliar:
+ *   post:
+ *     summary: Avalia um país (like/dislike)
+ *     tags:
+ *       - Países
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               code:
+ *                 type: string
+ *               action:
+ *                 type: string
+ *                 enum: [like, dislike]
+ *     responses:
+ *       200:
+ *         description: País avaliado com sucesso
+ *       400:
+ *         description: Requisição inválida
+ *       404:
+ *         description: País não encontrado
+ *       500:
+ *         description: Erro interno
+ */
+
 export const evaluateCountry = async (
   req: Request<{}, {}, EvaluateCountryRequest>,
   res: Response,

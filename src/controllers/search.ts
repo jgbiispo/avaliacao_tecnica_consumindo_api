@@ -5,6 +5,31 @@ import { mapCountry } from '../utils/mapCountry';
 import { mergeVotes } from '../utils/mergeVotes';
 import prisma from '../db';
 
+/**
+ * @swagger
+ * /paises/buscar:
+ *   get:
+ *     summary: Busca país pelo nome
+ *     tags:
+ *       - Países
+ *     parameters:
+ *       - in: query
+ *         name: nome
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Nome do país
+ *     responses:
+ *       200:
+ *         description: Lista de países encontrados
+ *       400:
+ *         description: Parâmetro obrigatório não fornecido
+ *       404:
+ *         description: Nenhum país encontrado
+ *       500:
+ *         description: Erro interno
+ */
+
 export const searchCountryByName = async (
   req: Request,
   res: Response<CountryWithVotes[] | { erro: string }>,
