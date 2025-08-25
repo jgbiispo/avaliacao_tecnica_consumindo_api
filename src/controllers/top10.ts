@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { CountryWithVotes } from '../types/country';
 import { fetchAllCountries } from '../services/restCountries';
 import { mapCountry } from '../utils/mapCountry';
@@ -7,7 +7,8 @@ import { mergeVotes } from '../utils/mergeVotes';
 
 const top10Controller = async (
   _req: Request,
-  res: Response<CountryWithVotes[] | { erro: string }>
+  res: Response<CountryWithVotes[] | { erro: string }>,
+  next: NextFunction
 ) => {
   try {
     const allCountries = await fetchAllCountries();
@@ -31,8 +32,7 @@ const top10Controller = async (
 
     res.json(result);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ erro: 'Falha ao listar top 10 países.' });
+    next(err);
   }
 };
 

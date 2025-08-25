@@ -1,23 +1,28 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { EvaluateCountryRequest } from '../types/request';
 import { fetchByCode } from '../services/restCountries';
 import prisma from '../db';
 
 export const evaluateCountry = async (
   req: Request<{}, {}, EvaluateCountryRequest>,
-  res: Response
+  res: Response,
+  next: NextFunction
 ) => {
   const { code, action } = req.body;
 
   if (!code || (action !== 'like' && action !== 'dislike')) {
-    return res.status(400).json({ message: 'Invalid request body' });
+    const err = new Error('Invalid request body') as any;
+    err.status = 400;
+    throw err;
   }
 
   try {
     const countryData = await fetchByCode(code);
 
     if (!countryData) {
-      return res.status(404).json({ message: 'Country not found' });
+      const err = new Error('Country not found') as any;
+      err.status = 404;
+      throw err;
     }
 
     const updatedVote = await prisma.countryVote.upsert({
@@ -41,7 +46,6 @@ export const evaluateCountry = async (
       votosTotais,
     });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: 'Internal server error' });
+    next(error);
   }
 };

@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { CountryWithVotes } from '../types/country';
 import { fetchByName } from '../services/restCountries';
 import { mapCountry } from '../utils/mapCountry';
@@ -7,21 +7,24 @@ import prisma from '../db';
 
 export const searchCountryByName = async (
   req: Request,
-  res: Response<CountryWithVotes[] | { erro: string }>
+  res: Response<CountryWithVotes[] | { erro: string }>,
+  next: NextFunction
 ) => {
   const nome = (req.query.nome as string | undefined)?.trim();
 
   if (!nome) {
-    return res.status(400).json({ erro: "Parâmetro 'nome' é obrigatório." });
+    const err = new Error('Invalid request body') as any;
+    err.status = 400;
+    return next(err);
   }
 
   try {
     const countries = await fetchByName(nome);
 
     if (countries.length === 0) {
-      return res
-        .status(404)
-        .json({ erro: 'Nenhum país encontrado com esse nome.' });
+      const err = new Error('Country not found') as any;
+      err.status = 404;
+      throw err;
     }
 
     const mapped = countries.map(mapCountry);
@@ -38,7 +41,6 @@ export const searchCountryByName = async (
 
     res.json(result);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ erro: 'Falha ao buscar países.' });
+    next(err);
   }
 };
